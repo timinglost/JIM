@@ -1,5 +1,5 @@
 from socket import socket, AF_INET, SOCK_STREAM
-import time, json, sys
+import time, json, sys, logging, log.server_log_config
 from utils import *
 
 
@@ -12,6 +12,7 @@ def massege_treatment(massage, config):
         return {"response": '200',
                 "time": time.time(),
                 "alert": "успешное завершение"}
+    server_log.info('400: Неверные данные')
     return {"response": '400',
             "time": time.time(),
             "alert": "Неверные данные"}
@@ -27,11 +28,10 @@ def main():
         if not 65535 >= port >= 1024:
             raise ValueError
     except IndexError:
-        print('После -\'p\' необходимо указать порт')
+        server_log.warning('После -\'p\' необходимо указать порт')
         sys.exit(1)
     except ValueError:
-        print(
-            'Порт должен быть указан в пределах от 1024 до 65535')
+        server_log.warning('Порт должен быть указан в пределах от 1024 до 65535')
         sys.exit(1)
 
     try:
@@ -41,8 +41,7 @@ def main():
             address = ''
 
     except IndexError:
-        print(
-            'После \'a\'- необходимо указать адрес для ')
+        server_log.warning('После \'a\'- необходимо указать адрес для ')
         sys.exit(1)
     s = socket(AF_INET, SOCK_STREAM)
     s.bind((address, port))
@@ -57,4 +56,5 @@ def main():
 
 
 if __name__ == '__main__':
+    server_log = logging.getLogger('server_log_config')
     main()
