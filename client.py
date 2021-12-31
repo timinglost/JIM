@@ -1,6 +1,7 @@
 from socket import socket, AF_INET, SOCK_STREAM
-import time, sys
+import time, sys, logging
 from utils import *
+import log.client_log_config
 
 
 def create_massege(config):
@@ -21,6 +22,7 @@ def response_treatment(answer, config):
 
 
 def main():
+        client_log = logging.getLogger('client_log_config')
         config = load_config()
         try:
                 address = sys.argv[1]
@@ -31,20 +33,21 @@ def main():
                 address = config['DEFAULT_IP_ADDRESS']
                 port = config['DEFAULT_PORT']
         except ValueError:
-                print('Порт должен быть указан в пределах от 1024 до 65535')
+                client_log.warning('Порт должен быть указан в пределах от 1024 до 65535')
                 sys.exit(1)
         s = socket(AF_INET, SOCK_STREAM)
         try:
-                print(address, type(port))
                 s.connect((address, port))
+                client_log.info('Установленно подключение')
                 massage = create_massege(config)
                 post_data(s, massage, config)
                 answer = get_data(s, config)
                 s.close()
+                client_log.info('Подключение закрыто')
                 print(response_treatment(answer, config))
         except ConnectionRefusedError:
-                print('400: Bad Request')
+                client_log.error('400: Bad Request')
 
 
 if __name__ == '__main__':
-    main()
+        main()
