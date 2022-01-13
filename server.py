@@ -1,8 +1,33 @@
 from socket import socket, AF_INET, SOCK_STREAM
 import time, json, sys, logging, log.server_log_config
 from utils import *
+from functools import wraps
+import inspect
 
 
+class Log:
+    def __init__(self):
+        pass
+
+    def __call__(self, func):
+        @wraps(func)
+        def call(*args, **kwargs):
+            server_log_use = logging.getLogger('server_log_config_use')
+            server_log_use.setLevel(logging.INFO)
+
+            my_file_handler_use = logging.FileHandler('log/server.log')
+            client_formatter_use = logging.Formatter("%(asctime)s - %(message)s ")
+            my_file_handler_use.setFormatter(client_formatter_use)
+            my_file_handler_use.setLevel(logging.INFO)
+            server_log_use.addHandler(my_file_handler_use)
+            previous_func = inspect.stack()[1][3]
+            server_log_use.info(f'Функция {func.__name__} вызвана из функции {previous_func}')
+            return func(*args, **kwargs)
+
+        return call
+
+
+@Log()
 def massege_treatment(massage, config):
     if config['ACTION'] in massage \
             and massage[config['ACTION']] == config['PRESENCE'] \
