@@ -1,5 +1,5 @@
 from socket import socket, AF_INET, SOCK_STREAM
-import time, json, sys, logging, log.server_log_config
+import time, json, sys, logging, log.server_log_config, select
 from utils import *
 from functools import wraps
 import inspect
@@ -45,6 +45,7 @@ def massege_treatment(massage, config):
 
 def main():
     config = load_config()
+    clients = []
     try:
         if '-p' in sys.argv:
             port = int(sys.argv[sys.argv.index('-p') + 1])
@@ -71,13 +72,34 @@ def main():
     s = socket(AF_INET, SOCK_STREAM)
     s.bind((address, port))
     s.listen(config['MAX_CONNECTIONS'])
+    s.settimeout(0.2)
 
     while True:
-        client, addr = s.accept()
-        client_data = get_data(client, config)
-        answer = massege_treatment(client_data, config)
-        post_data(client, answer, config)
-        client.close()
+        try:
+            client, addr = s.accept()
+            client_data = get_data(client, config)
+            answer = massege_treatment(client_data, config)
+            post_data(client, answer, config)
+        except OSError as e:
+            pass
+        # client.close()
+        else:
+            clients.append(client)
+        finally:
+            r = []
+            w = []
+            try:
+                r, w, e = select.select(clients, clients, [], 0)
+            except Exception as e:
+                pass
+            massage = ''
+            for client_i in r:
+                massage = get_data(client_i, config)
+            for client_i in w:
+                try:
+                    post_data(client_i, massage, config)
+                except Exception as e:
+                    clients.remove(client_i)
 
 
 if __name__ == '__main__':

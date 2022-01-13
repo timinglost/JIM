@@ -64,12 +64,10 @@ def main():
                 answer = get_data(s, config)
                 print(response_treatment(answer, config))
                 while True:
-                    massage_post = input('Введите сообщение: ')
-                    if massage_post == 'q':
-                        s.close()
-                        break
-                    post_data(s, massage_post, config)
-                # s.close()
+                    answer_get = get_data(s, config)
+                    if answer_get != '':
+                        print(answer_get)
+                s.close()
                 client_log.info('Подключение закрыто')
         except ConnectionRefusedError:
                 client_log.error('400: Bad Request')
